@@ -3,8 +3,8 @@
     <title>Registration Form</title>
     <style type="text/css">
     body { background-color: #fff; border-top: solid 10px #000;
-        color: #333; font-size: .85em; margin: 20; padding: 20;
-        font-family: "Segoe UI", Verdana, Helvetica, Sans-Serif;
+        color: #333; font-size: .85em; margin: 20px; padding: 20px;
+        font-family: Verdana, Helvetica, Sans-Serif;
     }
     h1, h2, h3,{ color: #000; margin-bottom: 0; padding-bottom: 0; }
     h1 { font-size: 2em; }
@@ -28,7 +28,9 @@
         <br>
             Email
             <input type="text" name="email" id="email" />
-        </br>
+        <br>
+        Test
+        <input type="text" name="test" id="tets" />
         <input type="submit" name="submit" value="Submit" />
     </form>
     <?php
@@ -77,15 +79,14 @@
         echo "<tr><th>Name</th>";
         echo "<th>Email</th>";
         echo "<th>Date</th></tr>";
+        echo "<th>Test</th></tr>";
         foreach($registrants as $registrant) {
             echo "<tr><td>".$registrant['name']."</td>";
             echo "<td>".$registrant['email']."</td>";
             echo "<td>".$registrant['date']."</td></tr>";
         }
         echo "</table>";
-    } else {
-        echo "<h3>No one is currently registered.</h3>";
-    }
+    } else { echo "<h3>No one is currently registered.</h3>";  }
     ?>
 </body>
 </html>
