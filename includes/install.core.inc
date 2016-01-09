@@ -362,8 +362,7 @@ function install_run_tasks(&$install_state) {
  * Runs an individual installation task.
  *
  * @param $task
- *   An array of information about the task to be run as returned by
- *   hook_install_tasks().
+ *   An array of information about the task to be run.
  * @param $install_state
  *   An array of information about the current installation state. This is
  *   passed in by reference so that it can be modified by the task.
@@ -479,15 +478,11 @@ function install_run_task($task, &$install_state) {
  * the page request evolves (for example, if an installation profile hasn't
  * been selected yet, we don't yet know which profile tasks need to be run).
  *
- * You can override this using hook_install_tasks() or
- * hook_install_tasks_alter().
- *
  * @param $install_state
  *   An array of information about the current installation state.
  *
  * @return
- *   A list of tasks to be performed, with associated metadata as returned by
- *   hook_install_tasks().
+ *   A list of tasks to be performed, with associated metadata.
  */
 function install_tasks_to_perform($install_state) {
   // Start with a list of all currently available tasks.
@@ -1046,7 +1041,19 @@ function install_select_profile(&$install_state) {
   $install_state['profiles'] += install_find_profiles();
   if (empty($install_state['parameters']['profile'])) {
     // Try to find a profile.
-    $profile = _install_select_profile($install_state['profiles']);
+    $profiles = $install_state['profiles'];
+    foreach ($profiles as $key => $profile) {
+      $details = install_profile_info($profile->name);
+      // Remove hidden profiles (such as the testing profile, which only exists
+      // to speed up test runs) from the list. This prevents them from being
+      // displayed in the user interface, and also means that if there is only
+      // one non-hidden profile, _install_select_profile() will choose it
+      // automatically.
+      if (!empty($details['hidden'])) {
+        unset($profiles[$key]);
+      }
+    }
+    $profile = _install_select_profile($profiles);
     if (empty($profile)) {
       // We still don't have a profile, so display a form for selecting one.
       // Only do this in the case of interactive installations, since this is
@@ -1056,7 +1063,7 @@ function install_select_profile(&$install_state) {
       if ($install_state['interactive']) {
         include_once DRUPAL_ROOT . '/includes/form.inc';
         drupal_set_title(st('Select an installation profile'));
-        $form = drupal_get_form('install_select_profile_form', $install_state['profiles']);
+        $form = drupal_get_form('install_select_profile_form', $profiles);
         return drupal_render($form);
       }
       else {
@@ -1144,6 +1151,8 @@ function install_select_profile_form($form, &$form_state, $profile_files) {
     $details = install_profile_info($profile->name);
     // Don't show hidden profiles. This is used by to hide the testing profile,
     // which only exists to speed up test runs.
+    // @todo: This duplicates logic in install_select_profile() and is here
+    //   only for backwards compatibility. Remove it in Drupal 8.
     if ($details['hidden'] === TRUE) {
       continue;
     }
@@ -1590,9 +1599,7 @@ function install_finished(&$install_state) {
 }
 
 /**
- * Implements callback_batch_operation().
- *
- * Performs batch installation of modules.
+ * Batch callback for batch installation of modules.
  */
 function _install_module_batch($module, $module_name, &$context) {
   // Install and enable the module right away, so that the module will be
@@ -1605,8 +1612,6 @@ function _install_module_batch($module, $module_name, &$context) {
 }
 
 /**
- * Implements callback_batch_finished().
- *
  * 'Finished' callback for module installation batch.
  */
 function _install_profile_modules_finished($success, $results, $operations) {

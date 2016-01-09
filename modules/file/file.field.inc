@@ -252,12 +252,6 @@ function file_field_insert($entity_type, $entity, $field, $instance, $langcode, 
  * Checks for files that have been removed from the object.
  */
 function file_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  // Check whether the field is defined on the object.
-  if (!isset($entity->{$field['field_name']})) {
-    // We cannot check for removed files if the field is not defined.
-    return;
-  }
-
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   // On new revisions, all files are considered to be a new usage and no
@@ -632,7 +626,7 @@ function file_field_widget_process($element, &$form_state, $form) {
   $element['#theme'] = 'file_widget';
 
   // Add the display field if enabled.
-  if (!empty($field['settings']['display_field'])) {
+  if (!empty($field['settings']['display_field']) && $item['fid']) {
     $element['display'] = array(
       '#type' => empty($item['fid']) ? 'hidden' : 'checkbox',
       '#title' => t('Include file in display'),
